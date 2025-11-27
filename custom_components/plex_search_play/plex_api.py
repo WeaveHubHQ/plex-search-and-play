@@ -173,15 +173,10 @@ class PlexSearchAPI:
                 _LOGGER.info("No results found for query: %s", query)
                 return []
 
-            # Parse and format results
-            formatted_results = []
-            for idx, item in enumerate(results[:limit]):
-                try:
-                    formatted_item = self._format_media_item(item, idx)
-                    formatted_results.append(formatted_item)
-                except Exception as err:
-                    _LOGGER.warning("Error formatting media item: %s", err)
-                    continue
+            # Parse and format results in executor to avoid blocking the event loop
+            formatted_results = await asyncio.to_thread(
+                self._format_results_blocking, results[:limit]
+            )
 
             _LOGGER.info("Found %d results for query: %s", len(formatted_results), query)
             return formatted_results
@@ -257,6 +252,18 @@ class PlexSearchAPI:
 
         # Return full URL including the server base URL
         return f"{self._plex_url}{item.thumb}?X-Plex-Token={self._plex_token}"
+
+    def _format_results_blocking(self, items: list[Any]) -> list[dict[str, Any]]:
+        """Format a list of Plex media items in a worker thread."""
+        formatted_results: list[dict[str, Any]] = []
+        for idx, item in enumerate(items):
+            try:
+                formatted_item = self._format_media_item(item, idx)
+                formatted_results.append(formatted_item)
+            except Exception as err:
+                _LOGGER.warning("Error formatting media item: %s", err)
+                continue
+        return formatted_results
 
     def _get_genres(self, item: Any) -> list[str]:
         """Extract genre names from a media item."""
