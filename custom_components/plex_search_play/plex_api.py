@@ -322,8 +322,15 @@ class PlexSearchAPI:
             _LOGGER.exception("Error getting media URL: %s", err)
             raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
 
-    def get_libraries(self) -> list[str]:
-        """Get list of available library section names.
+    def _get_libraries_blocking(self) -> list[str]:
+        """Blocking call to get library sections.
+
+        This runs in an executor to avoid blocking the event loop.
+        """
+        return [section.title for section in self._server.library.sections()]
+
+    async def async_get_libraries(self) -> list[str]:
+        """Get list of available library section names (async version).
 
         Returns:
             List of library section names
@@ -332,7 +339,27 @@ class PlexSearchAPI:
             return []
 
         try:
-            return [section.title for section in self._server.library.sections()]
+            loop = asyncio.get_event_loop()
+            libraries = await loop.run_in_executor(None, self._get_libraries_blocking)
+            return libraries
+        except Exception as err:
+            _LOGGER.exception("Error getting libraries: %s", err)
+            return []
+
+    def get_libraries(self) -> list[str]:
+        """Get list of available library section names (sync version - deprecated).
+
+        Note: This is kept for backward compatibility but should not be called
+        from async contexts. Use async_get_libraries() instead.
+
+        Returns:
+            List of library section names
+        """
+        if not self._server:
+            return []
+
+        try:
+            return self._get_libraries_blocking()
         except Exception as err:
             _LOGGER.exception("Error getting libraries: %s", err)
             return []

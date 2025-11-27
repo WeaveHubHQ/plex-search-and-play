@@ -15,10 +15,10 @@
       },
       "players": {
         "title": "Select Media Players and Libraries",
-        "description": "Choose which media players you want to use and which Plex libraries to search. {info}",
+        "description": "Choose which media players you want to use and which Plex libraries to search.",
         "data": {
-          "selected_players": "Media Players",
-          "libraries": "Plex Libraries to Search"
+          "selected_players": "Selected Players",
+          "libraries": "Libraries"
         },
         "data_description": {
           "selected_players": "Select the media players you want to use for playback",
@@ -41,8 +41,8 @@
         "title": "Configure Plex Search and Play",
         "description": "Update your media player selection and library preferences.",
         "data": {
-          "selected_players": "Media Players",
-          "libraries": "Plex Libraries to Search"
+          "selected_players": "Selected Players",
+          "libraries": "Libraries"
         },
         "data_description": {
           "selected_players": "Select the media players you want to use for playback",

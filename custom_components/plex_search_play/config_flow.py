@@ -55,7 +55,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     server_name = api.get_server_name()
 
     # Get available libraries
-    libraries = api.get_libraries()
+    libraries = await api.async_get_libraries()
 
     return {
         "title": f"Plex: {server_name}",
@@ -143,7 +143,7 @@ class PlexSearchPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Optional(
                     CONF_SELECTED_PLAYERS,
-                    default=media_players,
+                    default=[],
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(
                         domain=MEDIA_PLAYER_DOMAIN,
@@ -152,7 +152,7 @@ class PlexSearchPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Optional(
                     CONF_LIBRARIES,
-                    default=self._libraries,
+                    default=[],
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=self._libraries,
@@ -206,7 +206,7 @@ class PlexSearchPlayOptionsFlow(config_entries.OptionsFlow):
 
         try:
             await api.async_connect()
-            available_libraries = api.get_libraries()
+            available_libraries = await api.async_get_libraries()
         except PlexSearchAPIError:
             available_libraries = current_libraries
 
