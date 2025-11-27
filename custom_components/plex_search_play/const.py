@@ -14,12 +14,19 @@ CONF_LIBRARIES: Final = "libraries"
 # Default values
 DEFAULT_PORT: Final = 32400
 DEFAULT_SEARCH_LIMIT: Final = 6
+DEFAULT_BROWSE_LIMIT: Final = 50
+DEFAULT_BROWSE_PAGE_SIZE: Final = 50
 DEFAULT_TIMEOUT: Final = 10
 
 # Service names
 SERVICE_SEARCH: Final = "search"
 SERVICE_PLAY_MEDIA: Final = "play_media"
 SERVICE_CLEAR_RESULTS: Final = "clear_results"
+SERVICE_BROWSE_LIBRARY: Final = "browse_library"
+SERVICE_GET_ON_DECK: Final = "get_on_deck"
+SERVICE_GET_RECENTLY_ADDED: Final = "get_recently_added"
+SERVICE_GET_BY_GENRE: Final = "get_by_genre"
+SERVICE_GET_COLLECTIONS: Final = "get_collections"
 
 # Sensor attributes
 ATTR_RATING_KEY: Final = "rating_key"

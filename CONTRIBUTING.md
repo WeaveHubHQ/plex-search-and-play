@@ -29,7 +29,7 @@ This project follows the Home Assistant community standards. Be respectful, incl
 
 ### Finding Issues to Work On
 
-1. Check the [Issues](https://github.com/yourusername/plex-search-and-play/issues) page
+1. Check the [Issues](https://github.com/InfoSecured/plex-search-and-play/issues) page
 2. Look for issues tagged with `good first issue` for beginner-friendly tasks
 3. Check `help wanted` for areas where contributions are especially needed
 4. Feel free to propose new features via GitHub Discussions

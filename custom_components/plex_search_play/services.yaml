@@ -46,3 +46,117 @@ play_media:
 clear_results:
   name: Clear Search Results
   description: Clear all current search results
+
+browse_library:
+  name: Browse Library
+  description: Browse a specific Plex library section with pagination support
+  fields:
+    library_name:
+      name: Library Name
+      description: The name of the library section to browse (e.g., "Movies", "TV Shows")
+      required: true
+      example: "Movies"
+      selector:
+        text:
+    start:
+      name: Start Index
+      description: Starting index for pagination
+      required: false
+      default: 0
+      example: 0
+      selector:
+        number:
+          min: 0
+          mode: box
+    limit:
+      name: Limit
+      description: Number of items to return per page
+      required: false
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 1
+          max: 200
+          mode: box
+    sort:
+      name: Sort Order
+      description: Sort order for results (e.g., "titleSort", "addedAt:desc", "year:desc")
+      required: false
+      example: "titleSort"
+      selector:
+        text:
+
+get_on_deck:
+  name: Get On Deck
+  description: Get currently in-progress media items (Continue Watching)
+  fields:
+    limit:
+      name: Limit
+      description: Maximum number of items to return
+      required: false
+      default: 20
+      example: 20
+      selector:
+        number:
+          min: 1
+          max: 100
+          mode: box
+
+get_recently_added:
+  name: Get Recently Added
+  description: Get recently added media items from your Plex library
+  fields:
+    limit:
+      name: Limit
+      description: Maximum number of items to return
+      required: false
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 1
+          max: 200
+          mode: box
+
+get_by_genre:
+  name: Get By Genre
+  description: Get media items filtered by a specific genre
+  fields:
+    library_name:
+      name: Library Name
+      description: The name of the library section to search
+      required: true
+      example: "Movies"
+      selector:
+        text:
+    genre:
+      name: Genre
+      description: The genre to filter by
+      required: true
+      example: "Action"
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: Maximum number of items to return
+      required: false
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 1
+          max: 200
+          mode: box
+
+get_collections:
+  name: Get Collections
+  description: Get all collections from a specific library
+  fields:
+    library_name:
+      name: Library Name
+      description: The name of the library section to get collections from
+      required: true
+      example: "Movies"
+      selector:
+        text:

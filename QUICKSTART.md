@@ -14,7 +14,7 @@ Get up and running with development in 5 minutes!
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/plex-search-and-play.git
+git clone https://github.com/InfoSecured/plex-search-and-play.git
 cd plex-search-and-play
 ```
 

@@ -95,7 +95,7 @@ Your token will be in the response XML under `<authentication-token>`.
 2. **Add Custom Repository**
    - Click the **three dots** (⋮) in the top right
    - Select **"Custom repositories"**
-   - Add URL: `https://github.com/yourusername/plex-search-and-play`
+   - Add URL: `https://github.com/InfoSecured/plex-search-and-play`
    - Category: **Integration**
    - Click **"Add"**
 
@@ -115,7 +115,7 @@ Your token will be in the response XML under `<authentication-token>`.
 
 1. **Download the Integration**
    - Download the latest release from GitHub
-   - Or clone: `git clone https://github.com/yourusername/plex-search-and-play.git`
+   - Or clone: `git clone https://github.com/InfoSecured/plex-search-and-play.git`
 
 2. **Copy Files**
    ```bash
@@ -447,7 +447,7 @@ If you're still having issues:
    - Look for errors related to `plex_search_play`
 
 3. **Report Issue**
-   - Go to: https://github.com/yourusername/plex-search-and-play/issues
+   - Go to: https://github.com/InfoSecured/plex-search-and-play/issues
    - Include:
      - Home Assistant version
      - Integration version

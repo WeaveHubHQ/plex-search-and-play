@@ -26,13 +26,20 @@ from .const import (
     CONF_PLEX_TOKEN,
     CONF_PLEX_URL,
     CONF_SELECTED_PLAYERS,
+    DEFAULT_BROWSE_LIMIT,
+    DEFAULT_BROWSE_PAGE_SIZE,
     DOMAIN,
     EVENT_PLAYBACK_FAILED,
     EVENT_PLAYBACK_STARTED,
     EVENT_SEARCH_COMPLETED,
     EVENT_SEARCH_FAILED,
     EVENT_SEARCH_STARTED,
+    SERVICE_BROWSE_LIBRARY,
     SERVICE_CLEAR_RESULTS,
+    SERVICE_GET_BY_GENRE,
+    SERVICE_GET_COLLECTIONS,
+    SERVICE_GET_ON_DECK,
+    SERVICE_GET_RECENTLY_ADDED,
     SERVICE_PLAY_MEDIA as PLEX_SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH,
 )
@@ -54,6 +61,41 @@ SERVICE_PLAY_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_RATING_KEY): cv.string,
         vol.Required("player_entity_id"): cv.entity_id,
+    }
+)
+
+SERVICE_BROWSE_LIBRARY_SCHEMA = vol.Schema(
+    {
+        vol.Required("library_name"): cv.string,
+        vol.Optional("start", default=0): cv.positive_int,
+        vol.Optional("limit", default=DEFAULT_BROWSE_PAGE_SIZE): cv.positive_int,
+        vol.Optional("sort"): cv.string,
+    }
+)
+
+SERVICE_GET_ON_DECK_SCHEMA = vol.Schema(
+    {
+        vol.Optional("limit", default=20): cv.positive_int,
+    }
+)
+
+SERVICE_GET_RECENTLY_ADDED_SCHEMA = vol.Schema(
+    {
+        vol.Optional("limit", default=DEFAULT_BROWSE_LIMIT): cv.positive_int,
+    }
+)
+
+SERVICE_GET_BY_GENRE_SCHEMA = vol.Schema(
+    {
+        vol.Required("library_name"): cv.string,
+        vol.Required("genre"): cv.string,
+        vol.Optional("limit", default=DEFAULT_BROWSE_LIMIT): cv.positive_int,
+    }
+)
+
+SERVICE_GET_COLLECTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required("library_name"): cv.string,
     }
 )
 
@@ -199,6 +241,171 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][entry.entry_id]["search_results"] = []
         _LOGGER.info("Search results cleared")
 
+    async def handle_browse_library(call: ServiceCall) -> None:
+        """Handle the browse_library service call."""
+        library_name = call.data["library_name"]
+        start = call.data.get("start", 0)
+        limit = call.data.get("limit", DEFAULT_BROWSE_PAGE_SIZE)
+        sort = call.data.get("sort")
+
+        _LOGGER.info("Browsing library: %s (start=%d, limit=%d)", library_name, start, limit)
+
+        try:
+            result = await api.async_browse_library(
+                library_name=library_name,
+                start=start,
+                limit=limit,
+                sort=sort
+            )
+
+            # Store results
+            hass.data[DOMAIN][entry.entry_id]["search_results"] = result["results"]
+
+            # Fire event with browse results
+            hass.bus.async_fire(
+                EVENT_SEARCH_COMPLETED,
+                {
+                    "library": library_name,
+                    "result_count": len(result["results"]),
+                    "total_count": result["total_count"],
+                    "has_more": result["has_more"],
+                    "results": result["results"]
+                }
+            )
+
+            _LOGGER.info("Browse completed: %d results found", len(result["results"]))
+
+        except PlexSearchAPIError as err:
+            _LOGGER.error("Browse failed: %s", err)
+            raise HomeAssistantError(f"Browse failed: {err}") from err
+
+    async def handle_get_on_deck(call: ServiceCall) -> None:
+        """Handle the get_on_deck service call."""
+        limit = call.data.get("limit", 20)
+
+        _LOGGER.info("Getting on deck items (limit=%d)", limit)
+
+        try:
+            results = await api.async_get_on_deck(
+                library_sections=libraries if libraries else None,
+                limit=limit
+            )
+
+            # Store results
+            hass.data[DOMAIN][entry.entry_id]["search_results"] = results
+
+            # Fire event
+            hass.bus.async_fire(
+                EVENT_SEARCH_COMPLETED,
+                {
+                    "type": "on_deck",
+                    "result_count": len(results),
+                    "results": results
+                }
+            )
+
+            _LOGGER.info("On deck completed: %d results found", len(results))
+
+        except PlexSearchAPIError as err:
+            _LOGGER.error("Get on deck failed: %s", err)
+            raise HomeAssistantError(f"Get on deck failed: {err}") from err
+
+    async def handle_get_recently_added(call: ServiceCall) -> None:
+        """Handle the get_recently_added service call."""
+        limit = call.data.get("limit", DEFAULT_BROWSE_LIMIT)
+
+        _LOGGER.info("Getting recently added items (limit=%d)", limit)
+
+        try:
+            results = await api.async_get_recently_added(
+                library_sections=libraries if libraries else None,
+                limit=limit
+            )
+
+            # Store results
+            hass.data[DOMAIN][entry.entry_id]["search_results"] = results
+
+            # Fire event
+            hass.bus.async_fire(
+                EVENT_SEARCH_COMPLETED,
+                {
+                    "type": "recently_added",
+                    "result_count": len(results),
+                    "results": results
+                }
+            )
+
+            _LOGGER.info("Recently added completed: %d results found", len(results))
+
+        except PlexSearchAPIError as err:
+            _LOGGER.error("Get recently added failed: %s", err)
+            raise HomeAssistantError(f"Get recently added failed: {err}") from err
+
+    async def handle_get_by_genre(call: ServiceCall) -> None:
+        """Handle the get_by_genre service call."""
+        library_name = call.data["library_name"]
+        genre = call.data["genre"]
+        limit = call.data.get("limit", DEFAULT_BROWSE_LIMIT)
+
+        _LOGGER.info("Getting items by genre: %s from %s (limit=%d)", genre, library_name, limit)
+
+        try:
+            results = await api.async_get_by_genre(
+                library_name=library_name,
+                genre=genre,
+                limit=limit
+            )
+
+            # Store results
+            hass.data[DOMAIN][entry.entry_id]["search_results"] = results
+
+            # Fire event
+            hass.bus.async_fire(
+                EVENT_SEARCH_COMPLETED,
+                {
+                    "type": "genre",
+                    "genre": genre,
+                    "library": library_name,
+                    "result_count": len(results),
+                    "results": results
+                }
+            )
+
+            _LOGGER.info("Genre browse completed: %d results found", len(results))
+
+        except PlexSearchAPIError as err:
+            _LOGGER.error("Get by genre failed: %s", err)
+            raise HomeAssistantError(f"Get by genre failed: {err}") from err
+
+    async def handle_get_collections(call: ServiceCall) -> None:
+        """Handle the get_collections service call."""
+        library_name = call.data["library_name"]
+
+        _LOGGER.info("Getting collections from: %s", library_name)
+
+        try:
+            results = await api.async_get_collections(library_name=library_name)
+
+            # Store results
+            hass.data[DOMAIN][entry.entry_id]["search_results"] = results
+
+            # Fire event
+            hass.bus.async_fire(
+                EVENT_SEARCH_COMPLETED,
+                {
+                    "type": "collections",
+                    "library": library_name,
+                    "result_count": len(results),
+                    "results": results
+                }
+            )
+
+            _LOGGER.info("Collections retrieved: %d found", len(results))
+
+        except PlexSearchAPIError as err:
+            _LOGGER.error("Get collections failed: %s", err)
+            raise HomeAssistantError(f"Get collections failed: {err}") from err
+
     # Register services
     hass.services.async_register(
         DOMAIN,
@@ -220,6 +427,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         handle_clear_results,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_BROWSE_LIBRARY,
+        handle_browse_library,
+        schema=SERVICE_BROWSE_LIBRARY_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_ON_DECK,
+        handle_get_on_deck,
+        schema=SERVICE_GET_ON_DECK_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_RECENTLY_ADDED,
+        handle_get_recently_added,
+        schema=SERVICE_GET_RECENTLY_ADDED_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_BY_GENRE,
+        handle_get_by_genre,
+        schema=SERVICE_GET_BY_GENRE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_COLLECTIONS,
+        handle_get_collections,
+        schema=SERVICE_GET_COLLECTIONS_SCHEMA,
+    )
+
     _LOGGER.info("Plex Search and Play integration setup complete")
 
     return True
@@ -237,6 +479,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.services.async_remove(DOMAIN, SERVICE_SEARCH)
             hass.services.async_remove(DOMAIN, PLEX_SERVICE_PLAY_MEDIA)
             hass.services.async_remove(DOMAIN, SERVICE_CLEAR_RESULTS)
+            hass.services.async_remove(DOMAIN, SERVICE_BROWSE_LIBRARY)
+            hass.services.async_remove(DOMAIN, SERVICE_GET_ON_DECK)
+            hass.services.async_remove(DOMAIN, SERVICE_GET_RECENTLY_ADDED)
+            hass.services.async_remove(DOMAIN, SERVICE_GET_BY_GENRE)
+            hass.services.async_remove(DOMAIN, SERVICE_GET_COLLECTIONS)
 
         # Remove data
         hass.data[DOMAIN].pop(entry.entry_id)

@@ -116,7 +116,7 @@ class PlexSearchPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
             description_placeholders={
-                "docs_url": "https://github.com/yourusername/plex-search-and-play#setup"
+                "docs_url": "https://github.com/InfoSecured/plex-search-and-play#setup"
             },
         )
 

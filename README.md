@@ -1,8 +1,8 @@
 # Plex Search and Play for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![GitHub Release](https://img.shields.io/github/release/yourusername/plex-search-and-play.svg)](https://github.com/yourusername/plex-search-and-play/releases)
-[![License](https://img.shields.io/github/license/yourusername/plex-search-and-play.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/release/InfoSecured/plex-search-and-play.svg)](https://github.com/InfoSecured/plex-search-and-play/releases)
+[![License](https://img.shields.io/github/license/InfoSecured/plex-search-and-play.svg)](LICENSE)
 
 A powerful Home Assistant integration that brings visual Plex media search and playback directly to your dashboard. Search your Plex library, browse results with thumbnails and metadata, and send content to any media player - all from a beautiful, glassmorphic interface.
 
@@ -331,8 +331,8 @@ Contributions are welcome! Please:
 ## Support
 
 - **Documentation**: [Setup Instructions](SETUP_INSTRUCTIONS.md)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/plex-search-and-play/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/plex-search-and-play/discussions)
+- **Issues**: [GitHub Issues](https://github.com/InfoSecured/plex-search-and-play/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/InfoSecured/plex-search-and-play/discussions)
 
 ## License
 

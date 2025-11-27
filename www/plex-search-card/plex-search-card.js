@@ -426,7 +426,7 @@ window.customCards.push({
   name: 'Plex Search Card',
   description: 'A card for searching and playing Plex media',
   preview: false,
-  documentationURL: 'https://github.com/yourusername/plex-search-and-play'
+  documentationURL: 'https://github.com/InfoSecured/plex-search-and-play'
 });
 
 console.info(

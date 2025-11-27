@@ -305,3 +305,285 @@ class PlexSearchAPI:
         except Exception as err:
             _LOGGER.exception("Error getting libraries: %s", err)
             return []
+
+    async def async_browse_library(
+        self,
+        library_name: str,
+        start: int = 0,
+        limit: int = 50,
+        sort: str | None = None
+    ) -> dict[str, Any]:
+        """Browse a Plex library section.
+
+        Args:
+            library_name: Name of the library section to browse
+            start: Starting index for pagination
+            limit: Number of items to return
+            sort: Sort order (e.g., "titleSort", "addedAt:desc", "year:desc")
+
+        Returns:
+            Dictionary with results and pagination info
+
+        Raises:
+            PlexSearchAPIError: If browse fails
+        """
+        if not self._server:
+            await self.async_connect()
+
+        try:
+            section = self._server.library.section(library_name)
+
+            # Get all items with optional sorting
+            if sort:
+                all_items = section.all(sort=sort)
+            else:
+                all_items = section.all()
+
+            total_count = len(all_items)
+
+            # Paginate results
+            paginated_items = all_items[start:start + limit]
+
+            # Format items
+            formatted_results = []
+            for idx, item in enumerate(paginated_items):
+                try:
+                    formatted_item = self._format_media_item(item, start + idx)
+                    formatted_results.append(formatted_item)
+                except Exception as err:
+                    _LOGGER.warning("Error formatting media item: %s", err)
+                    continue
+
+            _LOGGER.info(
+                "Browsing library '%s': returned %d items (start=%d, total=%d)",
+                library_name, len(formatted_results), start, total_count
+            )
+
+            return {
+                "results": formatted_results,
+                "total_count": total_count,
+                "start": start,
+                "limit": limit,
+                "has_more": (start + limit) < total_count
+            }
+
+        except NotFound as err:
+            _LOGGER.error("Library section '%s' not found", library_name)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+        except Exception as err:
+            _LOGGER.exception("Error browsing library: %s", err)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+
+    async def async_get_on_deck(
+        self,
+        library_sections: list[str] | None = None,
+        limit: int = 20
+    ) -> list[dict[str, Any]]:
+        """Get on deck (in progress) media items.
+
+        Args:
+            library_sections: Optional list of library sections to filter
+            limit: Maximum number of items to return
+
+        Returns:
+            List of on deck media items
+
+        Raises:
+            PlexSearchAPIError: If operation fails
+        """
+        if not self._server:
+            await self.async_connect()
+
+        try:
+            results = []
+
+            if library_sections:
+                # Get on deck from specific sections
+                for section_name in library_sections:
+                    try:
+                        section = self._server.library.section(section_name)
+                        on_deck_items = section.onDeck()
+                        results.extend(on_deck_items)
+                    except NotFound:
+                        _LOGGER.warning("Library section '%s' not found", section_name)
+                        continue
+            else:
+                # Get on deck from all libraries
+                results = self._server.library.onDeck()
+
+            # Format and limit results
+            formatted_results = []
+            for idx, item in enumerate(results[:limit]):
+                try:
+                    formatted_item = self._format_media_item(item, idx)
+                    # Add view offset for continue watching
+                    if hasattr(item, "viewOffset"):
+                        formatted_item["view_offset"] = item.viewOffset
+                    formatted_results.append(formatted_item)
+                except Exception as err:
+                    _LOGGER.warning("Error formatting on deck item: %s", err)
+                    continue
+
+            _LOGGER.info("Found %d on deck items", len(formatted_results))
+            return formatted_results
+
+        except Exception as err:
+            _LOGGER.exception("Error getting on deck items: %s", err)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+
+    async def async_get_recently_added(
+        self,
+        library_sections: list[str] | None = None,
+        limit: int = 50
+    ) -> list[dict[str, Any]]:
+        """Get recently added media items.
+
+        Args:
+            library_sections: Optional list of library sections to filter
+            limit: Maximum number of items to return
+
+        Returns:
+            List of recently added media items
+
+        Raises:
+            PlexSearchAPIError: If operation fails
+        """
+        if not self._server:
+            await self.async_connect()
+
+        try:
+            results = []
+
+            if library_sections:
+                # Get recently added from specific sections
+                for section_name in library_sections:
+                    try:
+                        section = self._server.library.section(section_name)
+                        recent_items = section.recentlyAdded(maxresults=limit)
+                        results.extend(recent_items)
+                    except NotFound:
+                        _LOGGER.warning("Library section '%s' not found", section_name)
+                        continue
+            else:
+                # Get recently added from all libraries
+                results = self._server.library.recentlyAdded(maxresults=limit)
+
+            # Format results
+            formatted_results = []
+            for idx, item in enumerate(results[:limit]):
+                try:
+                    formatted_item = self._format_media_item(item, idx)
+                    # Add added date if available
+                    if hasattr(item, "addedAt"):
+                        formatted_item["added_at"] = item.addedAt.isoformat()
+                    formatted_results.append(formatted_item)
+                except Exception as err:
+                    _LOGGER.warning("Error formatting recently added item: %s", err)
+                    continue
+
+            _LOGGER.info("Found %d recently added items", len(formatted_results))
+            return formatted_results
+
+        except Exception as err:
+            _LOGGER.exception("Error getting recently added items: %s", err)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+
+    async def async_get_by_genre(
+        self,
+        library_name: str,
+        genre: str,
+        limit: int = 50
+    ) -> list[dict[str, Any]]:
+        """Get media items filtered by genre.
+
+        Args:
+            library_name: Name of the library section
+            genre: Genre to filter by
+            limit: Maximum number of items to return
+
+        Returns:
+            List of media items in the specified genre
+
+        Raises:
+            PlexSearchAPIError: If operation fails
+        """
+        if not self._server:
+            await self.async_connect()
+
+        try:
+            section = self._server.library.section(library_name)
+
+            # Search by genre
+            results = section.search(genre=genre, limit=limit)
+
+            # Format results
+            formatted_results = []
+            for idx, item in enumerate(results):
+                try:
+                    formatted_item = self._format_media_item(item, idx)
+                    formatted_results.append(formatted_item)
+                except Exception as err:
+                    _LOGGER.warning("Error formatting genre item: %s", err)
+                    continue
+
+            _LOGGER.info(
+                "Found %d items in genre '%s' from library '%s'",
+                len(formatted_results), genre, library_name
+            )
+            return formatted_results
+
+        except NotFound as err:
+            _LOGGER.error("Library section '%s' not found", library_name)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+        except Exception as err:
+            _LOGGER.exception("Error getting items by genre: %s", err)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+
+    async def async_get_collections(
+        self,
+        library_name: str
+    ) -> list[dict[str, Any]]:
+        """Get collections from a library.
+
+        Args:
+            library_name: Name of the library section
+
+        Returns:
+            List of collections with basic info
+
+        Raises:
+            PlexSearchAPIError: If operation fails
+        """
+        if not self._server:
+            await self.async_connect()
+
+        try:
+            section = self._server.library.section(library_name)
+            collections = section.collections()
+
+            formatted_collections = []
+            for idx, collection in enumerate(collections):
+                try:
+                    formatted_collection = {
+                        "index": idx,
+                        ATTR_RATING_KEY: str(collection.ratingKey),
+                        "title": collection.title,
+                        ATTR_SUMMARY: getattr(collection, "summary", ""),
+                        ATTR_THUMB: self._get_thumb_url(collection),
+                        "child_count": getattr(collection, "childCount", 0),
+                        ATTR_MEDIA_TYPE: "collection"
+                    }
+                    formatted_collections.append(formatted_collection)
+                except Exception as err:
+                    _LOGGER.warning("Error formatting collection: %s", err)
+                    continue
+
+            _LOGGER.info("Found %d collections in library '%s'", len(formatted_collections), library_name)
+            return formatted_collections
+
+        except NotFound as err:
+            _LOGGER.error("Library section '%s' not found", library_name)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+        except Exception as err:
+            _LOGGER.exception("Error getting collections: %s", err)
+            raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
