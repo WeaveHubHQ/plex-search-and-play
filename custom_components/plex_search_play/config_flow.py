@@ -191,9 +191,15 @@ class PlexSearchPlayOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        # Get current configuration - config_entry is provided by parent class
-        current_players = self.config_entry.data.get(CONF_SELECTED_PLAYERS, [])
-        current_libraries = self.config_entry.data.get(CONF_LIBRARIES, [])
+        # Get current configuration - prefer options over data
+        current_players = self.config_entry.options.get(
+            CONF_SELECTED_PLAYERS,
+            self.config_entry.data.get(CONF_SELECTED_PLAYERS, [])
+        )
+        current_libraries = self.config_entry.options.get(
+            CONF_LIBRARIES,
+            self.config_entry.data.get(CONF_LIBRARIES, [])
+        )
 
         # Get Plex API to fetch available libraries
         plex_url = self.config_entry.data[CONF_PLEX_URL]

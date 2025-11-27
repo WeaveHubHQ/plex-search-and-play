@@ -137,8 +137,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register update listener to reload when options change
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    # Register update listener to update config when options change
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Register services
     async def handle_search(call: ServiceCall) -> None:
@@ -526,6 +526,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    # Update stored config with new options
+    selected_players = entry.options.get(
+        CONF_SELECTED_PLAYERS,
+        entry.data.get(CONF_SELECTED_PLAYERS, [])
+    )
+    libraries = entry.options.get(
+        CONF_LIBRARIES,
+        entry.data.get(CONF_LIBRARIES, [])
+    )
+
+    # Update the stored data
+    hass.data[DOMAIN][entry.entry_id]["selected_players"] = selected_players
+    hass.data[DOMAIN][entry.entry_id]["libraries"] = libraries
+
+    _LOGGER.info("Updated configuration: players=%s, libraries=%s", selected_players, libraries)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
