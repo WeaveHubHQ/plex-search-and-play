@@ -311,23 +311,24 @@ class PlexSearchAPI:
             await self.async_connect()
 
         try:
-            item = self._server.fetchItem(int(rating_key))
-            # Get the first media part URL
-            if hasattr(item, "media") and item.media:
-                media = item.media[0]
-                if hasattr(media, "parts") and media.parts:
-                    part = media.parts[0]
-                    key = part.key
-                    return f"{self._plex_url}{key}?X-Plex-Token={self._plex_token}"
-
-            raise PlexSearchAPIError("No playable media found")
-
+            return await asyncio.to_thread(self._get_media_url_blocking, rating_key)
         except NotFound as err:
             _LOGGER.error("Media item with rating key %s not found", rating_key)
             raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
         except Exception as err:
             _LOGGER.exception("Error getting media URL: %s", err)
             raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
+
+    def _get_media_url_blocking(self, rating_key: str) -> str:
+        """Blocking helper to get media URL (runs in executor thread)."""
+        item = self._server.fetchItem(int(rating_key))
+        if hasattr(item, "media") and item.media:
+            media = item.media[0]
+            if hasattr(media, "parts") and media.parts:
+                part = media.parts[0]
+                key = part.key
+                return f"{self._plex_url}{key}?X-Plex-Token={self._plex_token}"
+        raise PlexSearchAPIError("No playable media found")
 
     def _get_libraries_blocking(self) -> list[str]:
         """Blocking call to get library sections.
