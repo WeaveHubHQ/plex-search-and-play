@@ -324,7 +324,16 @@ class PlexSearchAPI:
         item = self._server.fetchItem(int(rating_key))
         media_type = getattr(item, "type", "video")
 
-        # Prefer Plex-provided stream URL (handles transcoding/compatibility)
+        # Use direct file path for better compatibility with media players
+        # Most players handle direct URLs better than transcoded streams
+        if hasattr(item, "media") and item.media:
+            media = item.media[0]
+            if hasattr(media, "parts") and media.parts:
+                part = media.parts[0]
+                key = part.key
+                return f"{self._plex_url}{key}?X-Plex-Token={self._plex_token}", media_type
+
+        # Fallback to transcoded stream URL if direct path not available
         try:
             stream_url = item.getStreamURL(
                 token=self._plex_token,
@@ -333,16 +342,9 @@ class PlexSearchAPI:
             )
             if stream_url:
                 return stream_url, media_type
-        except Exception:
-            # Fallback to manual URL below
-            pass
+        except Exception as err:
+            _LOGGER.warning("Failed to get stream URL: %s", err)
 
-        if hasattr(item, "media") and item.media:
-            media = item.media[0]
-            if hasattr(media, "parts") and media.parts:
-                part = media.parts[0]
-                key = part.key
-                return f"{self._plex_url}{key}?X-Plex-Token={self._plex_token}", media_type
         raise PlexSearchAPIError("No playable media found")
 
     def _get_libraries_blocking(self) -> list[str]:

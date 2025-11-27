@@ -209,13 +209,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
             # Call media_player.play_media service
+            # Determine the correct media content type
+            if media_type == "track":
+                content_type = MediaType.MUSIC
+            elif media_type in ("movie", "episode", "video"):
+                content_type = MediaType.VIDEO
+            else:
+                content_type = MediaType.URL
+
             await hass.services.async_call(
                 MEDIA_PLAYER_DOMAIN,
                 SERVICE_PLAY_MEDIA,
                 {
                     "entity_id": player_entity_id,
-                    # Apple TV and many players accept generic URL better than forcing VIDEO
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC if media_type == "track" else MediaType.URL,
+                    ATTR_MEDIA_CONTENT_TYPE: content_type,
                     ATTR_MEDIA_CONTENT_ID: media_url,
                 },
                 blocking=True,
