@@ -295,14 +295,14 @@ class PlexSearchAPI:
         except Exception:
             return []
 
-    async def async_get_media_url(self, rating_key: str) -> str:
-        """Get the playback URL for a media item.
+    async def async_get_media_url(self, rating_key: str) -> tuple[str, str]:
+        """Get the playback URL and media type for a media item.
 
         Args:
             rating_key: The Plex rating key for the media item
 
         Returns:
-            Playback URL
+            Tuple of (playback URL, media type string)
 
         Raises:
             PlexSearchAPIError: If media item not found
@@ -319,15 +319,16 @@ class PlexSearchAPI:
             _LOGGER.exception("Error getting media URL: %s", err)
             raise PlexSearchAPIError(ERROR_NO_RESULTS) from err
 
-    def _get_media_url_blocking(self, rating_key: str) -> str:
-        """Blocking helper to get media URL (runs in executor thread)."""
+    def _get_media_url_blocking(self, rating_key: str) -> tuple[str, str]:
+        """Blocking helper to get media URL and type (runs in executor thread)."""
         item = self._server.fetchItem(int(rating_key))
         if hasattr(item, "media") and item.media:
             media = item.media[0]
             if hasattr(media, "parts") and media.parts:
                 part = media.parts[0]
                 key = part.key
-                return f"{self._plex_url}{key}?X-Plex-Token={self._plex_token}"
+                media_type = getattr(item, "type", "video")
+                return f"{self._plex_url}{key}?X-Plex-Token={self._plex_token}", media_type
         raise PlexSearchAPIError("No playable media found")
 
     def _get_libraries_blocking(self) -> list[str]:

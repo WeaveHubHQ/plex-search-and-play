@@ -199,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             # Get media URL from Plex
-            media_url = await api.async_get_media_url(rating_key)
+            media_url, media_type = await api.async_get_media_url(rating_key)
 
             # Call media_player.play_media service
             await hass.services.async_call(
@@ -207,7 +207,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 SERVICE_PLAY_MEDIA,
                 {
                     "entity_id": player_entity_id,
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+                    # Fallback to VIDEO if unknown
+                    ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC if media_type == "track" else MediaType.VIDEO,
                     ATTR_MEDIA_CONTENT_ID: media_url,
                 },
                 blocking=True,
