@@ -1,0 +1,48 @@
+# Service definitions for Plex Search and Play
+
+search:
+  name: Search Plex Library
+  description: Search your Plex library for movies, TV shows, and other media
+  fields:
+    query:
+      name: Query
+      description: Search query string
+      required: true
+      example: "Inception"
+      selector:
+        text:
+    limit:
+      name: Limit
+      description: Maximum number of results to return
+      required: false
+      default: 6
+      example: 10
+      selector:
+        number:
+          min: 1
+          max: 20
+          mode: box
+
+play_media:
+  name: Play Media
+  description: Play selected Plex media on a media player
+  fields:
+    rating_key:
+      name: Rating Key
+      description: The Plex rating key of the media item to play
+      required: true
+      example: "12345"
+      selector:
+        text:
+    player_entity_id:
+      name: Player Entity ID
+      description: The entity ID of the media player to use
+      required: true
+      example: "media_player.living_room"
+      selector:
+        entity:
+          domain: media_player
+
+clear_results:
+  name: Clear Search Results
+  description: Clear all current search results

@@ -1,0 +1,398 @@
+# ============================================================================
+# Plex Search and Play - Automation Examples
+# ============================================================================
+# This file contains example automations for Plex Search and Play integration
+
+# ============================================================================
+# EXAMPLE 1: Voice Search via Google Assistant / Alexa
+# ============================================================================
+# Trigger a search when you say "Search Plex for [movie name]"
+
+automation:
+  - id: plex_voice_search
+    alias: "Plex: Voice Search"
+    description: "Search Plex when voice command is received"
+    trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: plex_search
+    action:
+      - service: plex_search_play.search
+        data:
+          query: "{{ trigger.event.data.query }}"
+          limit: 6
+
+---
+# ============================================================================
+# EXAMPLE 2: Scheduled Movie Night
+# ============================================================================
+# Automatically search for movies on Friday nights
+
+automation:
+  - id: friday_movie_search
+    alias: "Plex: Friday Movie Night"
+    description: "Search for popular movies on Friday evenings"
+    trigger:
+      - platform: time
+        at: "19:00:00"
+    condition:
+      - condition: time
+        weekday:
+          - fri
+    action:
+      - service: plex_search_play.search
+        data:
+          query: "action movies"
+          limit: 6
+      - service: notify.mobile_app
+        data:
+          title: "Movie Night! 🍿"
+          message: "Check your Plex dashboard for tonight's movie selection"
+
+---
+# ============================================================================
+# EXAMPLE 3: Search Based on Mood
+# ============================================================================
+# Search for content based on input_select mood
+
+automation:
+  - id: plex_mood_search
+    alias: "Plex: Mood-Based Search"
+    description: "Search Plex based on selected mood"
+    trigger:
+      - platform: state
+        entity_id: input_select.movie_mood
+    action:
+      - service: plex_search_play.search
+        data:
+          query: >
+            {% if trigger.to_state.state == 'Happy' %}
+              comedy
+            {% elif trigger.to_state.state == 'Sad' %}
+              drama
+            {% elif trigger.to_state.state == 'Excited' %}
+              action
+            {% elif trigger.to_state.state == 'Scared' %}
+              horror
+            {% else %}
+              popular
+            {% endif %}
+          limit: 6
+
+# Required input_select helper
+input_select:
+  movie_mood:
+    name: Movie Mood
+    options:
+      - Happy
+      - Sad
+      - Excited
+      - Scared
+      - Random
+    icon: mdi:emoticon
+
+---
+# ============================================================================
+# EXAMPLE 4: Auto-Play First Result
+# ============================================================================
+# Automatically play the first search result on a specific player
+
+automation:
+  - id: plex_auto_play_first
+    alias: "Plex: Auto-Play First Result"
+    description: "Automatically play first search result"
+    trigger:
+      - platform: event
+        event_type: plex_search_play_search_completed
+    condition:
+      - condition: template
+        value_template: "{{ trigger.event.data.result_count > 0 }}"
+      - condition: state
+        entity_id: input_boolean.plex_auto_play
+        state: "on"
+    action:
+      - delay:
+          seconds: 2
+      - service: plex_search_play.play_media
+        data:
+          rating_key: >
+            {{ state_attr('sensor.plex_search_and_play_result_1', 'rating_key') }}
+          player_entity_id: media_player.living_room
+      - service: notify.mobile_app
+        data:
+          title: "Now Playing"
+          message: >
+            {{ state_attr('sensor.plex_search_and_play_result_1', 'title') }}
+
+# Required input_boolean helper
+input_boolean:
+  plex_auto_play:
+    name: Plex Auto-Play
+    icon: mdi:play-circle
+
+---
+# ============================================================================
+# EXAMPLE 5: Search on NFC Tag Scan
+# ============================================================================
+# Search for a specific genre when you scan an NFC tag
+
+automation:
+  - id: plex_nfc_action_movies
+    alias: "Plex: NFC Action Movies"
+    description: "Search for action movies when action tag is scanned"
+    trigger:
+      - platform: tag
+        tag_id: action_movies_tag
+    action:
+      - service: plex_search_play.search
+        data:
+          query: "action movies 2023"
+          limit: 6
+      - service: notify.mobile_app
+        data:
+          title: "Action Movies 🎬"
+          message: "Check your dashboard for action movie selections"
+
+  - id: plex_nfc_comedies
+    alias: "Plex: NFC Comedies"
+    description: "Search for comedies when comedy tag is scanned"
+    trigger:
+      - platform: tag
+        tag_id: comedy_tag
+    action:
+      - service: plex_search_play.search
+        data:
+          query: "comedy"
+          limit: 6
+
+---
+# ============================================================================
+# EXAMPLE 6: Smart Recommendations Based on Time
+# ============================================================================
+# Search for age-appropriate content based on time of day
+
+automation:
+  - id: plex_time_based_search
+    alias: "Plex: Time-Based Content"
+    description: "Search for appropriate content based on time"
+    trigger:
+      - platform: time_pattern
+        hours: "/3"  # Every 3 hours
+    action:
+      - service: plex_search_play.search
+        data:
+          query: >
+            {% set hour = now().hour %}
+            {% if hour < 12 %}
+              kids cartoons
+            {% elif hour < 17 %}
+              family movies
+            {% elif hour < 21 %}
+              adventure movies
+            {% else %}
+              thriller movies
+            {% endif %}
+          limit: 6
+
+---
+# ============================================================================
+# EXAMPLE 7: Search on Button Press
+# ============================================================================
+# Create buttons to search for specific genres
+
+automation:
+  - id: plex_search_scifi
+    alias: "Plex: Search Sci-Fi"
+    description: "Search for sci-fi movies"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.search_scifi
+        to: "on"
+    action:
+      - service: plex_search_play.search
+        data:
+          query: "science fiction"
+          limit: 6
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.search_scifi
+
+# Required input_boolean helpers
+input_boolean:
+  search_scifi:
+    name: Search Sci-Fi
+    icon: mdi:rocket
+  search_horror:
+    name: Search Horror
+    icon: mdi:ghost
+  search_comedy:
+    name: Search Comedy
+    icon: mdi:emoticon-happy
+
+---
+# ============================================================================
+# EXAMPLE 8: Clear Results on Bedtime
+# ============================================================================
+# Clear search results when bedtime mode is activated
+
+automation:
+  - id: plex_clear_results_bedtime
+    alias: "Plex: Clear Results at Bedtime"
+    description: "Clear search results when bedtime mode starts"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.bedtime_mode
+        to: "on"
+    action:
+      - service: plex_search_play.clear_results
+
+---
+# ============================================================================
+# EXAMPLE 9: Notify on Search Completion
+# ============================================================================
+# Send notification when search completes with results
+
+automation:
+  - id: plex_search_notification
+    alias: "Plex: Search Complete Notification"
+    description: "Notify when search finds results"
+    trigger:
+      - platform: event
+        event_type: plex_search_play_search_completed
+    condition:
+      - condition: template
+        value_template: "{{ trigger.event.data.result_count > 0 }}"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Plex Search Complete"
+          message: >
+            Found {{ trigger.event.data.result_count }} results for "{{ trigger.event.data.query }}"
+          data:
+            actions:
+              - action: "OPEN_DASHBOARD"
+                title: "View Results"
+
+---
+# ============================================================================
+# EXAMPLE 10: Recently Added Content Search
+# ============================================================================
+# Daily automation to search for recently added content
+
+automation:
+  - id: plex_daily_new_content
+    alias: "Plex: Daily New Content Check"
+    description: "Search for recently added content each morning"
+    trigger:
+      - platform: time
+        at: "08:00:00"
+    action:
+      - service: plex_search_play.search
+        data:
+          query: "recently added"
+          limit: 6
+      - delay:
+          seconds: 5
+      - condition: template
+        value_template: >
+          {{ states('sensor.plex_search_and_play_search_status') != 'Found 0 results' }}
+      - service: notify.mobile_app
+        data:
+          title: "New Content on Plex! 🎬"
+          message: >
+            {{ states('sensor.plex_search_and_play_search_status') }}
+          data:
+            actions:
+              - action: "OPEN_PLEX"
+                title: "Browse Now"
+
+---
+# ============================================================================
+# EXAMPLE 11: Multi-Player Selection
+# ============================================================================
+# Allow dynamic player selection before playback
+
+automation:
+  - id: plex_dynamic_player_selection
+    alias: "Plex: Dynamic Player Selection"
+    description: "Play media on selected player from input_select"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.plex_play_trigger
+        to: "on"
+    action:
+      - service: plex_search_play.play_media
+        data:
+          rating_key: >
+            {{ states('input_text.plex_selected_rating_key') }}
+          player_entity_id: >
+            {{ states('input_select.plex_active_player') }}
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.plex_play_trigger
+
+# Required input helpers
+input_select:
+  plex_active_player:
+    name: Active Plex Player
+    options:
+      - media_player.living_room
+      - media_player.bedroom
+      - media_player.office_sonos
+    icon: mdi:cast
+
+input_text:
+  plex_selected_rating_key:
+    name: Selected Media Rating Key
+    max: 50
+
+input_boolean:
+  plex_play_trigger:
+    name: Play Media Trigger
+    icon: mdi:play
+
+---
+# ============================================================================
+# EXAMPLE 12: Presence-Based Recommendations
+# ============================================================================
+# Search for content based on who's home
+
+automation:
+  - id: plex_presence_recommendations
+    alias: "Plex: Presence-Based Recommendations"
+    description: "Recommend content based on who is home"
+    trigger:
+      - platform: state
+        entity_id:
+          - person.john
+          - person.jane
+        to: "home"
+    action:
+      - service: plex_search_play.search
+        data:
+          query: >
+            {% if is_state('person.john', 'home') and is_state('person.jane', 'home') %}
+              romantic comedy
+            {% elif is_state('person.john', 'home') %}
+              action thriller
+            {% elif is_state('person.jane', 'home') %}
+              drama
+            {% else %}
+              popular
+            {% endif %}
+          limit: 6
+
+---
+# ============================================================================
+# NOTES
+# ============================================================================
+#
+# - Replace entity IDs with your own
+# - Some examples require additional helper entities (input_boolean, input_select)
+# - Events (plex_search_play_search_completed) are fired by the integration
+# - Test automations in Developer Tools before deploying
+# - Use conditions to prevent unwanted triggers
+# - Consider rate limiting for frequently triggered automations
+#
+# ============================================================================

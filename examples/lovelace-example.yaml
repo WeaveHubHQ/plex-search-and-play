@@ -1,0 +1,346 @@
+# ============================================================================
+# Plex Search and Play - Lovelace Dashboard Examples
+# ============================================================================
+# This file contains example dashboard configurations for Plex Search and Play
+
+# ============================================================================
+# EXAMPLE 1: Full Custom Card Configuration
+# ============================================================================
+# This is the recommended setup using the custom Plex Search Card
+
+type: custom:plex-search-card
+entity: sensor.plex_search_and_play_search_status
+result_entities:
+  - sensor.plex_search_and_play_result_1
+  - sensor.plex_search_and_play_result_2
+  - sensor.plex_search_and_play_result_3
+  - sensor.plex_search_and_play_result_4
+  - sensor.plex_search_and_play_result_5
+  - sensor.plex_search_and_play_result_6
+player_entities:
+  - media_player.lg_webos_tv_oled65c4aua
+  - media_player.living_room
+  - media_player.family_room_sonos
+  - media_player.playstation_5
+  - media_player.lauren_s_lg_webos_2024_tv
+  - media_player.bedroom
+  - media_player.office_sonos
+title: Plex Search
+columns: 2
+show_thumbnails: true
+
+---
+# ============================================================================
+# EXAMPLE 2: Mobile-Friendly Single Column
+# ============================================================================
+
+type: custom:plex-search-card
+entity: sensor.plex_search_and_play_search_status
+result_entities:
+  - sensor.plex_search_and_play_result_1
+  - sensor.plex_search_and_play_result_2
+  - sensor.plex_search_and_play_result_3
+  - sensor.plex_search_and_play_result_4
+  - sensor.plex_search_and_play_result_5
+  - sensor.plex_search_and_play_result_6
+player_entities:
+  - media_player.living_room
+  - media_player.bedroom
+title: 🎬 Find Movies
+columns: 1
+show_thumbnails: true
+
+---
+# ============================================================================
+# EXAMPLE 3: Native Home Assistant Cards (No Custom Card Required)
+# ============================================================================
+# Use this if you prefer standard Home Assistant cards or can't use custom cards
+
+type: vertical-stack
+cards:
+  # Header
+  - type: markdown
+    content: |
+      # 🎬 Plex Search
+      Search your Plex library and play media on any device
+
+  # Search Status
+  - type: entity
+    entity: sensor.plex_search_and_play_search_status
+    name: Search Status
+    icon: mdi:magnify
+
+  # Results Grid
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      # Result 1
+      - type: conditional
+        conditions:
+          - entity: sensor.plex_search_and_play_result_1
+            state_not: "Empty"
+        card:
+          type: picture
+          image_entity: sensor.plex_search_and_play_result_1
+          tap_action:
+            action: more-info
+          hold_action:
+            action: call-service
+            service: plex_search_play.play_media
+            service_data:
+              rating_key: >
+                {{ state_attr('sensor.plex_search_and_play_result_1', 'rating_key') }}
+              player_entity_id: media_player.living_room
+
+      # Result 2
+      - type: conditional
+        conditions:
+          - entity: sensor.plex_search_and_play_result_2
+            state_not: "Empty"
+        card:
+          type: picture
+          image_entity: sensor.plex_search_and_play_result_2
+          tap_action:
+            action: more-info
+          hold_action:
+            action: call-service
+            service: plex_search_play.play_media
+            service_data:
+              rating_key: >
+                {{ state_attr('sensor.plex_search_and_play_result_2', 'rating_key') }}
+              player_entity_id: media_player.living_room
+
+      # Result 3
+      - type: conditional
+        conditions:
+          - entity: sensor.plex_search_and_play_result_3
+            state_not: "Empty"
+        card:
+          type: picture
+          image_entity: sensor.plex_search_and_play_result_3
+          tap_action:
+            action: more-info
+          hold_action:
+            action: call-service
+            service: plex_search_play.play_media
+            service_data:
+              rating_key: >
+                {{ state_attr('sensor.plex_search_and_play_result_3', 'rating_key') }}
+              player_entity_id: media_player.living_room
+
+      # Result 4
+      - type: conditional
+        conditions:
+          - entity: sensor.plex_search_and_play_result_4
+            state_not: "Empty"
+        card:
+          type: picture
+          image_entity: sensor.plex_search_and_play_result_4
+          tap_action:
+            action: more-info
+          hold_action:
+            action: call-service
+            service: plex_search_play.play_media
+            service_data:
+              rating_key: >
+                {{ state_attr('sensor.plex_search_and_play_result_4', 'rating_key') }}
+              player_entity_id: media_player.living_room
+
+---
+# ============================================================================
+# EXAMPLE 4: Entities Card with Detailed Info
+# ============================================================================
+
+type: vertical-stack
+cards:
+  - type: markdown
+    content: "## 🔍 Plex Search Results"
+
+  - type: entity
+    entity: sensor.plex_search_and_play_search_status
+
+  - type: entities
+    title: Results
+    entities:
+      - entity: sensor.plex_search_and_play_result_1
+        type: custom:multiple-entity-row
+        name: Result 1
+        secondary_info: last-changed
+        entities:
+          - attribute: year
+            name: Year
+          - attribute: media_type
+            name: Type
+
+      - entity: sensor.plex_search_and_play_result_2
+        type: custom:multiple-entity-row
+        name: Result 2
+        secondary_info: last-changed
+        entities:
+          - attribute: year
+            name: Year
+          - attribute: media_type
+            name: Type
+
+      - entity: sensor.plex_search_and_play_result_3
+        type: custom:multiple-entity-row
+        name: Result 3
+        secondary_info: last-changed
+        entities:
+          - attribute: year
+            name: Year
+          - attribute: media_type
+            name: Type
+
+---
+# ============================================================================
+# EXAMPLE 5: Button Card Grid (Requires button-card from HACS)
+# ============================================================================
+
+type: vertical-stack
+cards:
+  - type: markdown
+    content: "# 🎬 Plex Media Center"
+
+  - type: entity
+    entity: sensor.plex_search_and_play_search_status
+
+  - type: grid
+    columns: 3
+    square: true
+    cards:
+      - type: custom:button-card
+        entity: sensor.plex_search_and_play_result_1
+        name: "[[[ return entity.state ]]]"
+        show_state: false
+        show_icon: false
+        styles:
+          card:
+            - background-image: "[[[ return 'url(' + entity.attributes.thumb + ')' ]]]"
+            - background-size: cover
+            - background-position: center
+            - border-radius: 12px
+          name:
+            - position: absolute
+            - bottom: 0
+            - left: 0
+            - right: 0
+            - background: rgba(0,0,0,0.7)
+            - padding: 10px
+            - font-weight: bold
+        tap_action:
+          action: call-service
+          service: plex_search_play.play_media
+          service_data:
+            rating_key: "[[[ return entity.attributes.rating_key ]]]"
+            player_entity_id: media_player.living_room
+
+      - type: custom:button-card
+        entity: sensor.plex_search_and_play_result_2
+        name: "[[[ return entity.state ]]]"
+        show_state: false
+        show_icon: false
+        styles:
+          card:
+            - background-image: "[[[ return 'url(' + entity.attributes.thumb + ')' ]]]"
+            - background-size: cover
+            - background-position: center
+            - border-radius: 12px
+          name:
+            - position: absolute
+            - bottom: 0
+            - left: 0
+            - right: 0
+            - background: rgba(0,0,0,0.7)
+            - padding: 10px
+            - font-weight: bold
+        tap_action:
+          action: call-service
+          service: plex_search_play.play_media
+          service_data:
+            rating_key: "[[[ return entity.attributes.rating_key ]]]"
+            player_entity_id: media_player.living_room
+
+      - type: custom:button-card
+        entity: sensor.plex_search_and_play_result_3
+        name: "[[[ return entity.state ]]]"
+        show_state: false
+        show_icon: false
+        styles:
+          card:
+            - background-image: "[[[ return 'url(' + entity.attributes.thumb + ')' ]]]"
+            - background-size: cover
+            - background-position: center
+            - border-radius: 12px
+          name:
+            - position: absolute
+            - bottom: 0
+            - left: 0
+            - right: 0
+            - background: rgba(0,0,0,0.7)
+            - padding: 10px
+            - font-weight: bold
+        tap_action:
+          action: call-service
+          service: plex_search_play.play_media
+          service_data:
+            rating_key: "[[[ return entity.attributes.rating_key ]]]"
+            player_entity_id: media_player.living_room
+
+---
+# ============================================================================
+# EXAMPLE 6: Compact View for Sidebar
+# ============================================================================
+
+type: vertical-stack
+cards:
+  - type: entity
+    entity: sensor.plex_search_and_play_search_status
+    name: Plex
+
+  - type: conditional
+    conditions:
+      - entity: sensor.plex_search_and_play_result_1
+        state_not: "Empty"
+    card:
+      type: glance
+      entities:
+        - entity: sensor.plex_search_and_play_result_1
+          tap_action:
+            action: call-service
+            service: plex_search_play.play_media
+            service_data:
+              rating_key: >
+                {{ state_attr('sensor.plex_search_and_play_result_1', 'rating_key') }}
+              player_entity_id: media_player.living_room
+        - entity: sensor.plex_search_and_play_result_2
+          tap_action:
+            action: call-service
+            service: plex_search_play.play_media
+            service_data:
+              rating_key: >
+                {{ state_attr('sensor.plex_search_and_play_result_2', 'rating_key') }}
+              player_entity_id: media_player.living_room
+        - entity: sensor.plex_search_and_play_result_3
+          tap_action:
+            action: call-service
+            service: plex_search_play.play_media
+            service_data:
+              rating_key: >
+                {{ state_attr('sensor.plex_search_and_play_result_3', 'rating_key') }}
+              player_entity_id: media_player.living_room
+
+---
+# ============================================================================
+# NOTES
+# ============================================================================
+#
+# - Replace media_player entity IDs with your own
+# - Customize colors, sizes, and layouts to match your dashboard theme
+# - The custom card provides the best user experience
+# - Native cards work but lack some interactive features
+# - For button-card examples, you need to install button-card from HACS
+# - Hold actions may not work on all browsers/devices
+#
+# ============================================================================
