@@ -155,10 +155,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         try:
+            # Get current libraries from hass.data (updated by config changes)
+            current_libraries = hass.data[DOMAIN][entry.entry_id].get("libraries", [])
+
             # Perform search
             results = await api.async_search(
                 query=query,
-                library_sections=libraries if libraries else None,
+                library_sections=current_libraries if current_libraries else None,
                 limit=limit
             )
 
@@ -192,8 +195,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         _LOGGER.info("Playing media (rating_key: %s) on %s", rating_key, player_entity_id)
 
+        # Get current selected players from hass.data (updated by config changes)
+        current_selected_players = hass.data[DOMAIN][entry.entry_id].get("selected_players", [])
+
         # Validate player is in selected list
-        if selected_players and player_entity_id not in selected_players:
+        if current_selected_players and player_entity_id not in current_selected_players:
             error_msg = f"Player {player_entity_id} is not in the selected players list"
             _LOGGER.error(error_msg)
             hass.bus.async_fire(
