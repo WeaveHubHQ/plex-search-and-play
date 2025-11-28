@@ -211,13 +211,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             is_plex_player = "plex" in player_entity_id.lower() and "plex_search_play" not in player_entity_id.lower()
 
             if is_plex_player:
-                # Plex media players: Use library metadata path
-                # The Plex integration accepts the library path directly
-                media_url = f"/library/metadata/{rating_key}"
-                content_type = "video"  # or MUSIC for music
+                # Plex media players: Use JSON payload format
+                # The Plex integration expects a JSON string with the plex_key
+                import json
+                payload = {
+                    "plex_key": f"/library/metadata/{rating_key}"
+                }
+                media_url = json.dumps(payload)
+                content_type = "music"  # Special type that triggers Plex integration processing
                 _LOGGER.debug(
-                    "Using Plex media player with library path: %s",
-                    media_url,
+                    "Using Plex media player with payload: %s",
+                    payload,
                 )
             else:
                 # Other players: Use direct media URL
