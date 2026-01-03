@@ -1,8 +1,8 @@
 # Plex Search and Play for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![GitHub Release](https://img.shields.io/github/release/InfoSecured/plex-search-and-play.svg)](https://github.com/InfoSecured/plex-search-and-play/releases)
-[![License](https://img.shields.io/github/license/InfoSecured/plex-search-and-play.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/release/WeaveHubHQ/plex-search-and-play.svg)](https://github.com/WeaveHubHQ/plex-search-and-play/releases)
+[![License](https://img.shields.io/github/license/WeaveHubHQ/plex-search-and-play.svg)](LICENSE)
 
 A powerful Home Assistant integration that brings visual Plex media search and playback directly to your dashboard. Search your Plex library, browse results with thumbnails and metadata, and send content to any media player - all from a beautiful, glassmorphic interface.
 
@@ -50,7 +50,7 @@ A powerful Home Assistant integration that brings visual Plex media search and p
 2. Click on "Integrations"
 3. Click the three dots in the top right corner
 4. Select "Custom repositories"
-5. Add this repository URL: `https://github.com/InfoSecured/plex-search-and-play`
+5. Add this repository URL: `https://github.com/WeaveHubHQ/plex-search-and-play`
 6. Select "Integration" as the category
 7. Click "Add"
 8. Find "Plex Search and Play" in HACS and click "Download"
@@ -331,8 +331,8 @@ Contributions are welcome! Please:
 ## Support
 
 - **Documentation**: [Setup Instructions](SETUP_INSTRUCTIONS.md)
-- **Issues**: [GitHub Issues](https://github.com/InfoSecured/plex-search-and-play/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/InfoSecured/plex-search-and-play/discussions)
+- **Issues**: [GitHub Issues](https://github.com/WeaveHubHQ/plex-search-and-play/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/WeaveHubHQ/plex-search-and-play/discussions)
 
 ## License
 
